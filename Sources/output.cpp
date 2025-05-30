@@ -7,14 +7,33 @@ namespace {
     }
 
     std::queue<std::string> Logs;
-    const int LOG_MAX_SIZE = 22;
+    const size_t LOG_MAX_SIZE = 22;
     const int LOG_OFFSET_Y = 8;
-    const int LOG_OFFSET_X = 3;
     std::string setLogCursor(int y) {
-        return "\033[" + std::to_string(y + LOG_OFFSET_Y) + ";" + std::to_string(LOG_OFFSET_X) + "H";
+        return "\033[" + std::to_string(y + LOG_OFFSET_Y) + ";3H";
     }
 
-    const char* FILLER = "                     ";
+    /**
+     * Inserts log message into UI
+     *
+     * @param message: Log message
+     */
+    void insertLog(const std::string& message) {
+        const char* FILLER = "                     ";
+        Logs.push(message);
+        if (Logs.size() > LOG_MAX_SIZE) {
+            Logs.pop();
+            std::queue<std::string> Temp = Logs;
+            while (!Temp.empty()) {
+                const int X = (LOG_MAX_SIZE - Temp.size()) + 1;
+                const std::string CursorPos = setLogCursor(X);
+                std::cout << CursorPos << FILLER << CursorPos << Temp.front();
+                Temp.pop();
+            }
+        } else {
+            std::cout << setLogCursor(Logs.size()) << message;
+        }
+    }
 
 }
 
@@ -24,6 +43,7 @@ namespace Output {
      * Outputs the main UI
      */
     void Dashboard() {
+        // Switch the Y Column to the right side
         std::cout << "\033[2J\033[H"
         <<"┏━INFO━━━━━━━━━━━━━━━━━┓┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
         <<"┃                      ┃┃     A B C D E F G H I J K L M N O P Q R S T U V W X Y Z   ┃\n"
@@ -62,46 +82,35 @@ namespace Output {
     }
 
     /**
-     * Adds user input to the log
+     * Log Handler
      */
     void Log(char key, const std::pair<char,char>& tile) {
 
         std::string Message;
 
-        switch (key)
-        {
-            case 'R': // Tile Revealed
-
-            // case '???': // Remove Flag
-            case 'F': // Flag placed
+        switch (key) {
+            case 'T': // Tap Tile
+                Message = "Tapped Tile " + formatTile(tile);
+                break;
+            case 'F': // Place Flag
                 Message = "Flagged Tile " + formatTile(tile);
+                break;
+            case 'U': // Unplace Flag
+                Message = "Unflagged Tile " + formatTile(tile);
+                break;
+            case 'R': //Reset Board
+                Message = "Reset Board";
                 break;
 
             case 'Q': // Quit program
                 exit(0);
 
-            case 'N': // New Board/Reset
-            break;
-
             default:
-                Message = "Invalid Input";
+                Message = "Bad Input";
                 break;
         }
 
-        // Insert the message onto the log
-        Logs.push(Message);
-        if (Logs.size() > LOG_MAX_SIZE) {
-            Logs.pop();
-            std::queue<std::string> Temp = Logs;
-            while (!Temp.empty()) {
-                const int X = (LOG_MAX_SIZE - Temp.size()) + 1;
-                const std::string CursorPos = setLogCursor(X);
-                std::cout << CursorPos << FILLER << CursorPos << Temp.front();
-                Temp.pop();
-            }
-        } else {
-            std::cout << setLogCursor(Logs.size()) << Message;
-        }
+        insertLog(Message);
 
     }
 
