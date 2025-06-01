@@ -18,6 +18,7 @@ namespace {
     {
         std::map<std::pair<char,char>,int> Tiles;
         std::set<std::pair<char,char>> Mines;
+        std::set<std::pair<char,char>> Revealed;
 
         /**
         * Cleans board data
@@ -25,6 +26,7 @@ namespace {
         void clean() {
             Tiles.clear();
             Mines.clear();
+            Revealed.clear();
         }
 
         /**
@@ -66,7 +68,7 @@ namespace {
             for (const auto& Tile : all_tiles) {
 
                 // If tile itself is a mine
-                if (Mines.find(Tile) != Board.Mines.end()) {
+                if (Mines.find(Tile) != Mines.end()) {
                     Tiles[Tile] = 9;
                     continue;
                 }
@@ -78,7 +80,7 @@ namespace {
                     if (IN_BOUNDS(Row,Column,i)) {
 
                         const std::pair<char,char> AdjacentTile = {CHAR_OFFSET + Row,CHAR_OFFSET + Column};
-                        if (Board.Mines.find(AdjacentTile) != Board.Mines.end()) {
+                        if (Mines.find(AdjacentTile) != Mines.end()) {
                             MinesFound++;
                         }
                     }
@@ -95,7 +97,6 @@ namespace {
         }
 
     } Board;
-
 
     /**
      * Creates vector containing every tile
@@ -168,6 +169,87 @@ namespace Tiles {
 
         Board.generateMines(AllTiles,SafeTiles);
         Board.setTiles(AllTiles);
+    }
+
+    /**
+     * Handles which tiles should be revealed based on tile input
+     *
+     * @param tapped_tile: Input tile
+     *
+     * @return WIP
+     */
+    TapResponse Tap(const std::pair<char,char>& tapped_tile) {
+
+        TapResponse Response;
+
+        // Tile is a mine
+        if (Board.Tiles[tapped_tile] == 9) {
+            for (const auto& Tile : Board.Mines) {
+                Response.Tiles.push_back({Tile,9});
+            }
+            Response.GameState = 'X';
+            return Response;
+        }
+
+        // Tile has at least 1 adjacent mine
+        else if (Board.Tiles[tapped_tile] != 0) {
+            Board.Revealed.insert(tapped_tile);
+            const int AdjacentMines = Board.Tiles[tapped_tile];
+            Response.Tiles.push_back({tapped_tile,AdjacentMines});
+            if (Board.Revealed.size() == TOTAL_TILES - NUM_MINES) {
+                Response.GameState = 'F';
+            } else {
+                Response.GameState = 'O';
+            }
+
+            return Response;
+        }
+
+        // Tile has 0 adjacent mines
+        else {
+
+            std::stack<std::pair<char,char>,std::vector<std::pair<char,char>>> Stack;
+            Stack.push(tapped_tile);
+
+            do {
+                std::pair<char, char> CurrentTile = Stack.top();
+                Stack.pop();
+
+                int Row = (CurrentTile.first - CHAR_OFFSET) - 1;
+                int Column = (CurrentTile.second - CHAR_OFFSET) - 1;
+
+                for (int i=1; i<=9; i++) {
+                    if (IN_BOUNDS(Row,Column,i)) {
+                        std::pair<char,char> AdjacentTile = {CHAR_OFFSET + Row,CHAR_OFFSET + Column};
+
+                        if (Board.Revealed.find(AdjacentTile) != Board.Revealed.end()) {
+                            Board.Revealed.insert(AdjacentTile);
+
+                            const int AdjacentMines = Board.Tiles[AdjacentTile];
+                            Response.Tiles.push_back({tapped_tile,AdjacentMines});
+                            if (AdjacentMines == 0) {
+                                Stack.push(AdjacentTile);
+                            }
+                        }
+                    }
+                    if (i%3==0) {
+                        Row++;
+                        Column -= 2;
+                    } else {
+                        Column++;
+                    }
+                }
+            } while (!Stack.empty());
+
+            if (Board.Revealed.size() == TOTAL_TILES - NUM_MINES) {
+                Response.GameState = 'F';
+            } else {
+                Response.GameState = 'O';
+            }
+
+            return Response;
+        }
+
     }
 
 }
