@@ -1,15 +1,17 @@
 #include "input.hpp"
 
 namespace {
+
+    // Constants
     const char* SET_CURSOR = "\033[33;12H";
     const char* FILLER = "                                                                         ";
 
     /**
      * Splits string input with given delimiter
-     * 
+     *
      * @param s: Input string
      * @param delimiter: Split delimiter
-     * 
+     *
      * @return Vector array of strings
      */
     std::vector<std::string> split(std::string& s,const char delimiter = ' ') {
@@ -38,10 +40,10 @@ namespace {
     const std::pair<char,char> InvalidTile = {'0','0'};
     /**
      * Checks for valid tile input and returns formatted tile data
-     * 
-     * @param tile: Input tile
-     * 
-     * @return Formatted tile data
+     *
+     * @param tile: Input tile string
+     *
+     * @return Formatted tile
      */
     std::pair<char,char> parseTile(std::string& tile) {
         const std::vector<std::string> Tokens = split(tile,':');
@@ -49,12 +51,13 @@ namespace {
             return InvalidTile;
         }
 
-        const std::string ComponentX = Tokens[0];
-        const std::string ComponentY = Tokens[1];
-        if ((ComponentX.size() == 1 && std::isalpha(ComponentX[0])) &&
-            (ComponentY.size() == 1 && std::isalpha(ComponentY[0]))
+        const std::string RowComponent = Tokens[0];
+        const std::string ColumnComponent = Tokens[1];
+        if ((RowComponent.size() == 1 && std::isalpha(RowComponent[0])) &&
+            (ColumnComponent.size() == 1 && std::isalpha(ColumnComponent[0]))
         ) {
-            return {std::toupper(ComponentX[0]),std::toupper(ComponentY[0])};
+            const std::pair<char,char> Tile = {std::toupper(RowComponent[0]),std::toupper(ColumnComponent[0])};
+            return Tile;
         }
         return InvalidTile;
     }
