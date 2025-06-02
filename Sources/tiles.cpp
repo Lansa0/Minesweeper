@@ -222,11 +222,11 @@ namespace Tiles {
                     if (IN_BOUNDS(Row,Column,i)) {
                         std::pair<char,char> AdjacentTile = {CHAR_OFFSET + Row,CHAR_OFFSET + Column};
 
-                        if (Board.Revealed.find(AdjacentTile) != Board.Revealed.end()) {
+                        if (Board.Revealed.find(AdjacentTile) == Board.Revealed.end()) {
                             Board.Revealed.insert(AdjacentTile);
 
                             const int AdjacentMines = Board.Tiles[AdjacentTile];
-                            Response.Tiles.push_back({tapped_tile,AdjacentMines});
+                            Response.Tiles.push_back({AdjacentTile,AdjacentMines});
                             if (AdjacentMines == 0) {
                                 Stack.push(AdjacentTile);
                             }
