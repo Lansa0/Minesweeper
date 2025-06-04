@@ -115,6 +115,7 @@ namespace {
             const std::pair<char,char>& starting_tile
         ) {
             std::vector<std::pair<std::pair<char,char>,int>> ret;
+
             // Fixes situations where the input tile isn't adjacent to any
             // other blank tile
             ret.push_back({starting_tile,Tiles[starting_tile]});
@@ -141,6 +142,9 @@ namespace {
                             if (AdjacentMines == 0) {
                                 Stack.push(AdjacentTile);
                             }
+
+                            // For situations where there is a false flag
+                            Flagged.erase(AdjacentTile);
                         }
                     }
                     if (i%3==0) {
