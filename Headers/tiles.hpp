@@ -17,4 +17,5 @@ namespace Tiles
 
     void generateBoard(const std::pair<char,char>& safe_tile);
     TapResponse Tap(const std::pair<char,char>& tapped_tile);
+    bool Flag(const std::pair<char,char>& flagged_tile);
 }
