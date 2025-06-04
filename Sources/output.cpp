@@ -212,6 +212,12 @@ namespace Output {
             case States::Log::Quit:
                 Message = "Program Quit";
                 break;
+            case States::Log::Win:
+                Message = "Game Won";
+                break;
+            case States::Log::Lose:
+                Message = "Game Lost";
+                break;
         }
             insertLog(Message);
     }
@@ -230,9 +236,10 @@ namespace Output {
     void Flag(const std::pair<char,char>& flagged_tile, const Responses::Flag& response) {
         setFlagCount(response.NumFlags);
 
-        char c = ' ';
+        char c;
         if (response.State == States::Flag::Add) {c = 'F';}
    else if (response.State == States::Flag::Remove) {c = '-';}
+   else if (response.State == States::Flag::Nothing) {return;}
 
         const int Row = flagged_tile.first - CHAR_OFFSET;
         const int Column = (flagged_tile.second - CHAR_OFFSET)*2;
