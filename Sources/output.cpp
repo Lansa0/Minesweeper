@@ -22,6 +22,10 @@ namespace {
         {8, "\033[38;5;245m"},  // 245  : Grey
     };
 
+    const int INFO_OFFSET_X = 19;
+    const int FLAG_INFO_OFFSET_Y = 4;
+    const int TILES_LEFT_INFO_OFFSET_Y = 5;
+
     // Macros
     inline std::string formatTile(const std::pair<char,char>& tile) {
         return {'\'',tile.first,':',tile.second,'\''};
@@ -75,12 +79,28 @@ namespace {
 
     }
 
-    void flagTile(const std::pair<char,char>& tile, bool add) {
-        const char s = add ? 'F' : '-';
+    /**
+     * Sets the number of flags used onto the UI
+     *
+     * @param num_flags: Number of flags used
+     */
+    void setFlagCount(const int num_flags) {
+        std::stringstream ss;
+        ss << std::setw(3) << std::setfill('0') << num_flags;
+        std::string Formatted = ss.str();
+        std::cout << setCursor(FLAG_INFO_OFFSET_Y,INFO_OFFSET_X) << Formatted;
+    }
 
-        const int Row = tile.first - CHAR_OFFSET;
-        const int Column = (tile.second - CHAR_OFFSET)*2;
-        std::cout << setCursor(TILE_OFFSET_Y + Row,TILE_OFFSET_X + Column) << s;
+    /**
+     * Sets the number of tiles left onto the UI
+     *
+     * @param num_tiles_left: Number of tiles left
+     */
+    void setRemainingCount(const int num_tiles_left) {
+        std::stringstream ss;
+        ss << std::setw(3) << std::setfill('0') << num_tiles_left;
+        std::string Formatted = ss.str();
+        std::cout << setCursor(TILES_LEFT_INFO_OFFSET_Y,INFO_OFFSET_X) << Formatted;
     }
 
 }
@@ -169,21 +189,28 @@ namespace Output {
         insertLog(Message);
     }
 
-    void Reveal(const std::vector<std::pair<std::pair<char,char>,int>>& tiles) {
+    void Reveal(const Responses::Tap& response) {
+        setFlagCount(response.NumFlags);
+        setRemainingCount(response.NumTilesLeft);
 
-        for (const auto& TileData : tiles) {
+        for (const auto& TileData : response.Tiles) {
             const std::pair<char,char> Tile = TileData.first;
             const int AdjacentMines = TileData.second;
             revealTile(Tile,AdjacentMines);
         }
     }
 
-    void Flag(const std::pair<char,char>& flagged_tile, const bool add) {
-        const char s = add ? 'F' : '-';
+    void Flag(const std::pair<char,char>& flagged_tile, const Responses::Flag& response) {
+        setFlagCount(response.NumFlags);
+
+        char c = ' ';
+        if (response.State == States::Flag::Add) {c = 'F';}
+   else if (response.State == States::Flag::Remove) {c = '-';}
 
         const int Row = flagged_tile.first - CHAR_OFFSET;
         const int Column = (flagged_tile.second - CHAR_OFFSET)*2;
-        std::cout << setCursor(TILE_OFFSET_Y + Row,TILE_OFFSET_X + Column) << s;
+
+        std::cout << setCursor(TILE_OFFSET_Y + Row,TILE_OFFSET_X + Column) << c;
     }
 
 }

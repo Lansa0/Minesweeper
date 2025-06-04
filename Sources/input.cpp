@@ -6,6 +6,15 @@ namespace {
     const char* SET_CURSOR = "\033[33;12H";
     const char* FILLER = "                                                                         ";
 
+    std::string parseInput() {
+        std::string Input;
+        do {
+            std::cout << SET_CURSOR << FILLER << SET_CURSOR;
+            std::getline(std::cin, Input);
+        } while (Input.empty());
+        return Input;
+    }
+
     /**
      * Splits string input with given delimiter
      *
@@ -69,41 +78,52 @@ namespace Input {
     /**
      * Input Handler
      */
-    Response Get() {
+    Responses::Input Get() {
 
-        std::string Input;
-        do {
-            std::cout << SET_CURSOR << FILLER << SET_CURSOR;
-            std::getline(std::cin, Input);
-        } while (Input.empty());
-
+        std::string Input = parseInput();
         std::vector<std::string> Tokens = split(Input);
 
-        Response R;
+        Responses::Input Response;
         switch (Tokens.size()) {
             case 1: {
                 std::string Key = Tokens[0];
-                if (Key == "quit" || Key == "reset") {
-                    R.Key = std::toupper(Key[0]);
-                    return R;
+
+                if (Key == "quit") {
+                    Response.Key = States::Input::Quit;
+                } else if (Key == "reset") {
+                    Response.Key = States::Input::Reset;
+                } else {
+                    Response.Key = States::Input::Bad;
                 }
-                return R;
+
+                return Response;
             }
 
             case 2: {
                 std::string Key = Tokens[0];
                 std::pair<char,char> Tile = parseTile(Tokens[1]);
+
                 if (Tile == InvalidTile) {
-                    return R;
-                } else if (Key == "tap" || Key == "flag" || Key == "unflag") {
-                    R.Key = std::toupper(Key[0]);
-                    R.Tile = Tile;
-                    return R;
+                    Response.Key = States::Input::Bad;
                 }
-                return R;
+
+                if (Key == "tap") {
+                    Response.Key = States::Input::Tap;
+                    Response.Tile = Tile;
+                } else if (Key == "flag") {
+                    Response.Key = States::Input::Flag;
+                    Response.Tile = Tile;
+                } else {
+                    Response.Key = States::Input::Bad;
+                }
+
+                return Response;
             }
 
-            default: return R;
+            default: {
+                Response.Key = States::Input::Bad;
+                return Response;
+            }
         }
     }
 }

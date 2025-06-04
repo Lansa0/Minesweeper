@@ -1,5 +1,7 @@
 #pragma once
 
+#include "responses.hpp"
+
 #include <algorithm>
 #include <utility>
 #include <random>
@@ -10,12 +12,8 @@
 
 namespace Tiles
 {
-    struct TapResponse {
-        std::vector<std::pair<std::pair<char,char>,int>> Tiles;
-        char GameState;
-    };
 
     void generateBoard(const std::pair<char,char>& safe_tile);
-    TapResponse Tap(const std::pair<char,char>& tapped_tile);
-    bool Flag(const std::pair<char,char>& flagged_tile);
+    Responses::Tap Tap(const std::pair<char,char>& tapped_tile);
+    Responses::Flag Flag(const std::pair<char,char>& flagged_tile);
 }

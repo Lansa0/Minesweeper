@@ -115,12 +115,14 @@ namespace {
             const std::pair<char,char>& starting_tile
         ) {
             std::vector<std::pair<std::pair<char,char>,int>> ret;
+            // Fixes situations where the input tile isn't adjacent to any
+            // other blank tile
+            ret.push_back({starting_tile,Tiles[starting_tile]});
 
             std::stack<std::pair<char,char>,std::vector<std::pair<char,char>>> Stack;
             Stack.push(starting_tile);
 
-            do
-            {
+            do {
                 auto CurrentTile = Stack.top();
                 Stack.pop();
 
@@ -153,6 +155,9 @@ namespace {
 
             return ret;
         }
+
+        // idk why i have some getter functions even though i could just directly get these values
+        // too lazy to change now
 
         /**
          * Returns the number of adjacent mines to a given tile
@@ -273,12 +278,15 @@ namespace Tiles {
      *
      * @return WIP
      */
-    TapResponse Tap(const std::pair<char,char>& tapped_tile) {
+    Responses::Tap Tap(const std::pair<char,char>& tapped_tile) {
 
-        TapResponse Response;
+        Responses::Tap Response;
 
+        // Do nothing pretty much
         if (Board.tileFlagged(tapped_tile)) {
-            Response.GameState = 'O';
+            Response.State = States::Game::Playon;
+            Response.NumTilesLeft = Board.getRemaining();
+            Response.NumFlags = Board.Flagged.size();
             return Response;
         }
 
@@ -289,23 +297,29 @@ namespace Tiles {
                 for (const auto& Mine : Board.Mines) {
                     Response.Tiles.push_back({Mine,9});
                 }
-                Response.GameState = 'X';
+                Response.State = States::Game::Lose;
+                Response.NumTilesLeft = Board.getRemaining();
+                Response.NumFlags = Board.Flagged.size();
                 return Response;
             }
 
             case 0: { // Tile is blank (0 adjacent mines)
-                auto Tiles = Board.findAllAdjacent(tapped_tile);
-                Response.Tiles = Tiles;
+                Response.Tiles = Board.findAllAdjacent(tapped_tile);
+                Response.NumTilesLeft = Board.getRemaining();
+                Response.NumFlags = Board.Flagged.size();
                 break;
             }
 
-            default: // Tile has at least 1 adjacent mine
+            default: { // Tile has at least 1 adjacent mine
                 Board.Revealed.insert(tapped_tile);
                 Response.Tiles.push_back({tapped_tile,AdjacentMines});
                 break;
+            }
         }
 
-        Response.GameState = Board.getRemaining() == NUM_MINES ? 'F' : 'O';
+        Response.State = Board.getRemaining() == NUM_MINES ? States::Game::Win : States::Game::Playon;
+        Response.NumTilesLeft = Board.getRemaining();
+        Response.NumFlags = Board.Flagged.size();
         return Response;
     }
 
@@ -326,15 +340,26 @@ namespace Tiles {
      * false: If the input tile is already flagged or revealed
      *
      */
-    bool Flag(const std::pair<char,char>& flagged_tile) {
+    Responses::Flag Flag(const std::pair<char,char>& flagged_tile) {
 
-        if (Board.tileFlagged(flagged_tile) || Board.tileRevealed(flagged_tile)) {
-            Board.Flagged.erase(flagged_tile);
-            return false;
+        Responses::Flag Response;
+
+        if (Board.tileRevealed(flagged_tile)) {     // Tile is revealed
+            Response.State = States::Flag::Nothing;
         }
 
-        Board.Flagged.insert(flagged_tile);
-        return true;
+        else if (Board.tileFlagged(flagged_tile)) { // Tile is currently flagged
+            Board.Flagged.erase(flagged_tile);
+            Response.State = States::Flag::Remove;
+        }
+
+        else {                                      // Tile is not currently flagged
+            Board.Flagged.insert(flagged_tile);
+            Response.State = States::Flag::Add;
+        }
+
+        Response.NumFlags = Board.Flagged.size();
+        return Response;
     };
 
 }
