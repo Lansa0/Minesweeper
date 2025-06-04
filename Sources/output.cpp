@@ -35,13 +35,14 @@ namespace {
         return "\033[" + std::to_string(y) + ';' + std::to_string(x) + 'H';
     }
 
-    std::queue<std::string> Logs;
     /**
      * Inserts log message into UI
      *
      * @param message: Log message
      */
     void insertLog(const std::string& message) {
+        static std::queue<std::string> Logs;
+
         const char* FILLER = "                     ";
         Logs.push(message);
         if (Logs.size() > LOG_MAX_SIZE) {
@@ -182,37 +183,37 @@ namespace Output {
      * @param failed_input: Status of the input
      *
      */
-    void Log(char key, const std::pair<char,char>& tile, bool failed_input) {
-        // TODO: Better logger
-
-        if (failed_input) {
-            insertLog("Failed Input");
-            return;
-        }
+    void Log(States::Log key, const std::pair<char,char>& tile) {
 
         std::string Message;
 
-        switch (key) {
-            case 'T': // Tap Tile
+        switch (key)  {
+            case States::Log::Tap:
                 Message = "Tapped Tile " + formatTile(tile);
                 break;
-            case 'F': // Place Flag
+            case States::Log::Flag:
                 Message = "Flagged Tile " + formatTile(tile);
                 break;
-            case 'U': // Unplace Flag
+            case States::Log::Unflag:
                 Message = "Unflagged Tile " + formatTile(tile);
                 break;
-            case 'R': //Reset Board
+            case States::Log::Flagfail:
+                Message = "Can't Flag Tile " + formatTile(tile);
+                break;
+            case States::Log::Reset:
                 Message = "Reset Board";
                 break;
-            case 'Q': // Quit program
-                exit(0);
-            default:
+            case States::Log::Failed:
+                Message = "Failed Input";
+                break;
+            case States::Log::Bad:
                 Message = "Bad Input";
                 break;
+            case States::Log::Quit:
+                Message = "Program Quit";
+                break;
         }
-
-        insertLog(Message);
+            insertLog(Message);
     }
 
     void Reveal(const Responses::Tap& response) {

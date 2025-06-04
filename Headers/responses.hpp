@@ -24,6 +24,17 @@ namespace States {
         Nothing
     };
 
+    enum class Log {
+        Tap,
+        Flag,
+        Unflag,
+        Flagfail,
+        Reset,
+        Failed,
+        Bad,
+        Quit
+    };
+
 }
 
 namespace Responses {
