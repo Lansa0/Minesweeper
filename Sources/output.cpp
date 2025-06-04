@@ -26,6 +26,9 @@ namespace {
     const int FLAG_INFO_OFFSET_Y = 4;
     const int TILES_LEFT_INFO_OFFSET_Y = 5;
 
+    const char* MINE = "\033[38;5;196m▇\033[0m";
+    const char* FLAG = "\033[38;5;208m▶\033[0m";
+
     // Macros
     inline std::string formatTile(const std::pair<char,char>& tile) {
         return {'\'',tile.first,':',tile.second,'\''};
@@ -72,7 +75,7 @@ namespace {
         std::cout << setCursor(TILE_OFFSET_Y + Row,TILE_OFFSET_X + Column);
 
         if (n == 9)
-        {std::cout << 'M';} // TEMPORARY
+        {std::cout << MINE;}
         else if (n == 0)
         {std::cout << ' ';}
         else
@@ -236,9 +239,9 @@ namespace Output {
     void Flag(const std::pair<char,char>& flagged_tile, const Responses::Flag& response) {
         setFlagCount(response.NumFlags);
 
-        char c;
-        if (response.State == States::Flag::Add) {c = 'F';}
-   else if (response.State == States::Flag::Remove) {c = '-';}
+        const char* c;
+        if (response.State == States::Flag::Add)     {c = FLAG;}
+   else if (response.State == States::Flag::Remove)  {c = "-";}
    else if (response.State == States::Flag::Nothing) {return;}
 
         const int Row = flagged_tile.first - CHAR_OFFSET;
