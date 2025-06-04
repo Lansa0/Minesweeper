@@ -76,7 +76,6 @@ namespace {
         {std::cout << ' ';}
         else
         {std::cout << TILE_COLOURS[n] << n << "\033[0m";}
-
     }
 
     /**
@@ -101,6 +100,33 @@ namespace {
         ss << std::setw(3) << std::setfill('0') << num_tiles_left;
         std::string Formatted = ss.str();
         std::cout << setCursor(TILES_LEFT_INFO_OFFSET_Y,INFO_OFFSET_X) << Formatted;
+    }
+
+    /**
+     * Resets board section of the UI
+     */
+    void resetBoard() {
+        const int TOTAL_TILES = 676;
+        int Row = 1;
+        int Column = 1;
+        for (int i = 1; i <= TOTAL_TILES; i++) {
+            std::cout << setCursor(TILE_OFFSET_Y + Row, TILE_OFFSET_X + (Column*2)) << '-';
+            if (i%26==0) { // 26 = number of columns
+                Row++;
+                Column = 1;
+            } else {
+                Column++;
+            }
+        }
+    }
+
+    /**
+     * Resets the Info section of the UI
+     */
+    void resetInfo() {
+        std::cout
+        << setCursor(FLAG_INFO_OFFSET_Y,INFO_OFFSET_X) << "&*^"
+        << setCursor(TILES_LEFT_INFO_OFFSET_Y,INFO_OFFSET_X) << "!~%";
     }
 
 }
@@ -211,6 +237,11 @@ namespace Output {
         const int Column = (flagged_tile.second - CHAR_OFFSET)*2;
 
         std::cout << setCursor(TILE_OFFSET_Y + Row,TILE_OFFSET_X + Column) << c;
+    }
+
+    void Reset() {
+        resetBoard();
+        resetInfo();
     }
 
 }
