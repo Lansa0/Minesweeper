@@ -14,11 +14,11 @@ namespace {
         return (Row > 0 && Row <= ROWS) && (Column > 0 && Column <= COLUMNS) && (i != 5);
     }
 
-    struct
-    {
+    struct {
         std::map<std::pair<char,char>,int> Tiles;
         std::set<std::pair<char,char>> Mines;
         std::set<std::pair<char,char>> Revealed;
+        std::set<std::pair<char,char>> Flagged;
 
         /**
         * Cleans board data
@@ -27,6 +27,7 @@ namespace {
             Tiles.clear();
             Mines.clear();
             Revealed.clear();
+            Flagged.clear();
         }
 
         /**
@@ -74,8 +75,8 @@ namespace {
                 }
 
                 int MinesFound = 0;
-                int Row = (Tile.first - CHAR_OFFSET) - 1;
-                int Column = (Tile.second - CHAR_OFFSET) - 1;
+                int Row = (Tile.first - CHAR_OFFSET) - 1;       // -1 so that it starts at the top left
+                int Column = (Tile.second - CHAR_OFFSET) - 1;   // adjacent tile
                 for (int i = 1; i <= 9; i++) {
                     if (IN_BOUNDS(Row,Column,i)) {
 
@@ -94,6 +95,100 @@ namespace {
 
                 Tiles[Tile] = MinesFound;
             }
+        }
+
+        /**
+         * Searches the entire board, starting at the input tile, for all tiles. If a tile found in the search is
+         * blank (0 adjacent mines), the tile will be added to the return vector as well as a search stack where
+         * further searches will occur. If the tile found is adjacent to at least 1 mine, it will be added to the
+         * return vector but not the search stack.
+         *
+         * Since searches only apply to blank tiles, no mines will be encountered
+         *
+         * @param starting_tile: Input blank tile where the search starts
+         *
+         * @return Vector containing individual tile data which includes the tile itself and the number of 
+         * adjacent mines
+         *
+         */
+        std::vector<std::pair<std::pair<char,char>,int>> findAllAdjacent(
+            const std::pair<char,char>& starting_tile
+        ) {
+            std::vector<std::pair<std::pair<char,char>,int>> ret;
+
+            std::stack<std::pair<char,char>,std::vector<std::pair<char,char>>> Stack;
+            Stack.push(starting_tile);
+
+            do
+            {
+                auto CurrentTile = Stack.top();
+                Stack.pop();
+
+                int Row = (CurrentTile.first - CHAR_OFFSET) - 1;
+                int Column = (CurrentTile.second - CHAR_OFFSET) - 1;
+
+                for (int i=1; i<=9; i++) {
+                    if (IN_BOUNDS(Row,Column,i)) {
+                        std::pair<char,char> AdjacentTile = {CHAR_OFFSET + Row,CHAR_OFFSET + Column};
+
+                        if (Revealed.find(AdjacentTile) == Revealed.end()) {
+                            Revealed.insert(AdjacentTile);
+
+                            const int AdjacentMines = Tiles[AdjacentTile];
+                            ret.push_back({AdjacentTile,AdjacentMines});
+                            if (AdjacentMines == 0) {
+                                Stack.push(AdjacentTile);
+                            }
+                        }
+                    }
+                    if (i%3==0) {
+                        Row++;
+                        Column -= 2;
+                    } else {
+                        Column++;
+                    }
+                }
+
+            } while (!Stack.empty());
+
+            return ret;
+        }
+
+        /**
+         * Returns the number of adjacent mines to a given tile
+         *
+         * @param tile: Input tile
+         *
+         */
+        inline int getNumAdjacentMines(const std::pair<char,char>& tile) {
+            return Tiles[tile];
+        }
+
+        /**
+         * Returns if given tile is currently flagged
+         *
+         * @param tile: Input tile
+         *
+         */
+        inline bool tileFlagged(const std::pair<char,char>& tile) {
+            return Flagged.find(tile) != Flagged.end();
+        }
+
+        /**
+         * Returns if given tile is currently revealed
+         *
+         * @param tile: Input tile
+         *
+         */
+        inline bool tileRevealed(const std::pair<char,char>& tile) {
+            return Revealed.find(tile) != Revealed.end();
+        }
+
+        /**
+         * Returns the number of unrevealed tiles
+         */
+        inline int getRemaining() {
+            return TOTAL_TILES - Revealed.size();
         }
 
     } Board;
@@ -182,74 +277,64 @@ namespace Tiles {
 
         TapResponse Response;
 
-        // Tile is a mine
-        if (Board.Tiles[tapped_tile] == 9) {
-            for (const auto& Tile : Board.Mines) {
-                Response.Tiles.push_back({Tile,9});
-            }
-            Response.GameState = 'X';
+        if (Board.tileFlagged(tapped_tile)) {
+            Response.GameState = 'O';
             return Response;
         }
 
-        // Tile has at least 1 adjacent mine
-        else if (Board.Tiles[tapped_tile] != 0) {
-            Board.Revealed.insert(tapped_tile);
-            const int AdjacentMines = Board.Tiles[tapped_tile];
-            Response.Tiles.push_back({tapped_tile,AdjacentMines});
-            if (Board.Revealed.size() == TOTAL_TILES - NUM_MINES) {
-                Response.GameState = 'F';
-            } else {
-                Response.GameState = 'O';
-            }
+        const int AdjacentMines = Board.getNumAdjacentMines(tapped_tile);
 
-            return Response;
-        }
-
-        // Tile has 0 adjacent mines
-        else {
-
-            std::stack<std::pair<char,char>,std::vector<std::pair<char,char>>> Stack;
-            Stack.push(tapped_tile);
-
-            do {
-                std::pair<char, char> CurrentTile = Stack.top();
-                Stack.pop();
-
-                int Row = (CurrentTile.first - CHAR_OFFSET) - 1;
-                int Column = (CurrentTile.second - CHAR_OFFSET) - 1;
-
-                for (int i=1; i<=9; i++) {
-                    if (IN_BOUNDS(Row,Column,i)) {
-                        std::pair<char,char> AdjacentTile = {CHAR_OFFSET + Row,CHAR_OFFSET + Column};
-
-                        if (Board.Revealed.find(AdjacentTile) == Board.Revealed.end()) {
-                            Board.Revealed.insert(AdjacentTile);
-
-                            const int AdjacentMines = Board.Tiles[AdjacentTile];
-                            Response.Tiles.push_back({AdjacentTile,AdjacentMines});
-                            if (AdjacentMines == 0) {
-                                Stack.push(AdjacentTile);
-                            }
-                        }
-                    }
-                    if (i%3==0) {
-                        Row++;
-                        Column -= 2;
-                    } else {
-                        Column++;
-                    }
+        switch (AdjacentMines) {
+            case 9: { // Tile is a mine
+                for (const auto& Mine : Board.Mines) {
+                    Response.Tiles.push_back({Mine,9});
                 }
-            } while (!Stack.empty());
-
-            if (Board.Revealed.size() == TOTAL_TILES - NUM_MINES) {
-                Response.GameState = 'F';
-            } else {
-                Response.GameState = 'O';
+                Response.GameState = 'X';
+                return Response;
             }
 
-            return Response;
+            case 0: { // Tile is blank (0 adjacent mines)
+                auto Tiles = Board.findAllAdjacent(tapped_tile);
+                Response.Tiles = Tiles;
+                break;
+            }
+
+            default: // Tile has at least 1 adjacent mine
+                Board.Revealed.insert(tapped_tile);
+                Response.Tiles.push_back({tapped_tile,AdjacentMines});
+                break;
         }
 
+        Response.GameState = Board.getRemaining() == NUM_MINES ? 'F' : 'O';
+        return Response;
     }
+
+    /**
+     * Handles flagging/unflagging tiles
+     *
+     * Flagging a tile that doesn't have a flag will add it to the set of flagged tiles
+     *
+     * Flagging a tile that does have a flag will remove it from the set of flagged tiles
+     *
+     * Flagging a tile that is already revealed will do nothing
+     *
+     * @param flagged_tile: Input Tile
+     *
+     * @return
+     * true: If the input tile is not already flagged
+     *
+     * false: If the input tile is already flagged or revealed
+     *
+     */
+    bool Flag(const std::pair<char,char>& flagged_tile) {
+
+        if (Board.tileFlagged(flagged_tile) || Board.tileRevealed(flagged_tile)) {
+            Board.Flagged.erase(flagged_tile);
+            return false;
+        }
+
+        Board.Flagged.insert(flagged_tile);
+        return true;
+    };
 
 }
