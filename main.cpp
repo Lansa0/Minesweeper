@@ -6,25 +6,27 @@
 // Set to 85x34
 // clang++ -std=c++11 -IHeaders -o binary/minesweeper main.cpp Sources/output.cpp Sources/input.cpp Sources/tiles.cpp && ./binary/minesweeper
 
-// TODO
-// recreate and fix that one bug, somehow
 
 int main() {
     Output::Dashboard();
 
-    bool NewBoard = true;
-
-    States::Game GameState;
+    bool NewGame = true;
+    States::Game GameState = States::Game::Playon;
 
     do {
         const Responses::Input Response = Input::Get();
-        const auto Tile = Response.Tile;
-        const auto Key = Response.Key;
+        const std::pair<char,char> Tile = Response.Tile;
+        const States::Input Key = Response.Key;
+
+        if ((GameState != States::Game::Playon) && !(Key == States::Input::Reset || Key == States::Input::Quit)) {
+            Output::Log(States::Log::Failed,Tile);
+            continue;
+        }
 
         switch (Key) {
             case States::Input::Tap: {
-                if (NewBoard) {
-                    NewBoard = false;
+                if (NewGame) {
+                    NewGame = false;
                     Tiles::generateBoard(Tile);
                 }
 
@@ -37,7 +39,7 @@ int main() {
             }
 
             case States::Input::Flag: {
-                if (NewBoard) {
+                if (NewGame) {
                     Output::Log(States::Log::Failed,Tile);
                     break;
                 }
@@ -59,11 +61,12 @@ int main() {
             }
 
             case States::Input::Reset: {
-                if (NewBoard) {
+                if (NewGame) {
                     Output::Log(States::Log::Failed,Tile);
                     break;
                 }
-                NewBoard = true;
+                NewGame = true;
+                GameState = States::Game::Playon;
 
                 Output::Reset();
                 Output::Log(States::Log::Reset,Tile);
@@ -82,22 +85,23 @@ int main() {
             }
         }
 
-        // Output::Log(Key,Response.Tile,FailedInput);
+        if (NewGame) {continue;}
 
         switch (GameState) {
             case States::Game::Playon: {
-                break;
+                break; // Do nothing
             }
 
             case States::Game::Win: {
+                Output::Log(States::Log::Win,Tile);
                 break;
             }
 
             case States::Game::Lose: {
+                Output::Log(States::Log::Lose,Tile);
                 break;
             }
         }
 
     } while (true);
-
 }
