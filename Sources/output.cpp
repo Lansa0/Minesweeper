@@ -12,7 +12,7 @@ namespace {
     const int TILE_OFFSET_X = 29;
     const int TILE_OFFSET_Y = 3;
     std::map<int,std::string> TILE_COLOURS = {
-        {1, "\033[38;5;99m"},   // 26   : Blue
+        {1, "\033[38;5;26m"},   // 26   : Blue
         {2, "\033[38;5;22m"},   // 22   : Green
         {3, "\033[38;5;196m"},  // 196  : Red
         {4, "\033[38;5;226m"},  // 226  : Yellow
@@ -23,11 +23,11 @@ namespace {
     };
 
     // Macros
-    std::string formatTile(const std::pair<char,char>& tile) {
+    inline std::string formatTile(const std::pair<char,char>& tile) {
         return {'\'',tile.first,':',tile.second,'\''};
     }
 
-    std::string setCursor(int y, int x) {
+    inline std::string setCursor(int y, int x) {
         return "\033[" + std::to_string(y) + ';' + std::to_string(x) + 'H';
     }
 
@@ -73,6 +73,14 @@ namespace {
         else
         {std::cout << TILE_COLOURS[n] << n << "\033[0m";}
 
+    }
+
+    void flagTile(const std::pair<char,char>& tile, bool add) {
+        const char s = add ? 'F' : '-';
+
+        const int Row = tile.first - CHAR_OFFSET;
+        const int Column = (tile.second - CHAR_OFFSET)*2;
+        std::cout << setCursor(TILE_OFFSET_Y + Row,TILE_OFFSET_X + Column) << s;
     }
 
 }
@@ -129,6 +137,7 @@ namespace Output {
      *
      */
     void Log(char key, const std::pair<char,char>& tile, bool failed_input) {
+        // TODO: Better logger
 
         if (failed_input) {
             insertLog("Failed Input");
@@ -169,5 +178,12 @@ namespace Output {
         }
     }
 
+    void Flag(const std::pair<char,char>& flagged_tile, const bool add) {
+        const char s = add ? 'F' : '-';
+
+        const int Row = flagged_tile.first - CHAR_OFFSET;
+        const int Column = (flagged_tile.second - CHAR_OFFSET)*2;
+        std::cout << setCursor(TILE_OFFSET_Y + Row,TILE_OFFSET_X + Column) << s;
+    }
 
 }
