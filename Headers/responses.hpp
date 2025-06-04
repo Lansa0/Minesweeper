@@ -32,7 +32,9 @@ namespace States {
         Reset,
         Failed,
         Bad,
-        Quit
+        Quit,
+        Win,
+        Lose
     };
 
 }
