@@ -32,7 +32,6 @@ namespace States {
         Reset,
         Failed,
         Bad,
-        Quit,
         Win,
         Lose
     };
@@ -56,6 +55,14 @@ namespace Responses {
     struct Flag {
         States::Flag State;
         int NumFlags;
+    };
+
+    // idk where else to put this
+    struct SessionStats {
+        int BoardsPlayed = 0;
+        int GamesWon = 0;
+        int GamesLost = 0;
+        int TilesRevealed = 0;
     };
 
 }
