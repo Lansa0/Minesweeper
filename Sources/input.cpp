@@ -55,9 +55,10 @@ namespace {
      * @return Formatted tile
      */
     std::pair<char,char> parseTile(std::string& tile) {
-        const std::vector<std::string> Tokens = split(tile,':');
+        std::vector<std::string> Tokens = split(tile,':');
         if (Tokens.size() != 2) {
-            return InvalidTile;
+            Tokens = split(tile,';');
+            if (Tokens.size() != 2) {return InvalidTile;}
         }
 
         const std::string RowComponent = Tokens[0];
@@ -88,9 +89,9 @@ namespace Input {
             case 1: {
                 std::string Key = Tokens[0];
 
-                if (Key == "quit") {
+                if (Key == "quit" || Key == "q") {
                     Response.Key = States::Input::Quit;
-                } else if (Key == "reset") {
+                } else if (Key == "reset" || Key == "r") {
                     Response.Key = States::Input::Reset;
                 } else {
                     Response.Key = States::Input::Bad;
@@ -108,10 +109,10 @@ namespace Input {
                     return Response;
                 }
 
-                if (Key == "tap") {
+                if (Key == "tap" || Key == "t") {
                     Response.Key = States::Input::Tap;
                     Response.Tile = Tile;
-                } else if (Key == "flag") {
+                } else if (Key == "flag" || Key == "f") {
                     Response.Key = States::Input::Flag;
                     Response.Tile = Tile;
                 } else {
