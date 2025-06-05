@@ -3,12 +3,9 @@
 #include "input.hpp"
 #include "tiles.hpp"
 
-// Set to 85x34
-// clang++ -std=c++11 -IHeaders -o binary/minesweeper main.cpp Sources/output.cpp Sources/input.cpp Sources/tiles.cpp && ./binary/minesweeper
-
-
 int main() {
     Output::Dashboard();
+    Responses::SessionStats SessionStats = Responses::SessionStats();
 
     bool NewGame = true;
     States::Game GameState = States::Game::Playon;
@@ -27,10 +24,12 @@ int main() {
             case States::Input::Tap: {
                 if (NewGame) {
                     NewGame = false;
+                    SessionStats.BoardsPlayed++;
                     Tiles::generateBoard(Tile);
                 }
 
                 const Responses::Tap TR = Tiles::Tap(Tile);
+                SessionStats.TilesRevealed += TR.Tiles.size();
                 GameState = TR.State;
 
                 Output::Reveal(TR);
@@ -79,9 +78,8 @@ int main() {
             }
 
             case States::Input::Quit: {
-                Output::Log(States::Log::Quit,Tile);
-                // Add a proper exit
-                return 1;
+                Output::Quit(SessionStats);
+                return 0;
             }
         }
 
@@ -93,11 +91,13 @@ int main() {
             }
 
             case States::Game::Win: {
+                SessionStats.GamesWon++;
                 Output::Log(States::Log::Win,Tile);
                 break;
             }
 
             case States::Game::Lose: {
+                SessionStats.GamesLost++;
                 Output::Log(States::Log::Lose,Tile);
                 break;
             }
