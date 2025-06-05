@@ -105,6 +105,7 @@ namespace Input {
 
                 if (Tile == InvalidTile) {
                     Response.Key = States::Input::Bad;
+                    return Response;
                 }
 
                 if (Key == "tap") {
