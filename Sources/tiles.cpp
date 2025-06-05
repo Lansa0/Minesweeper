@@ -161,6 +161,7 @@ namespace {
         }
 
         // idk why i have some getter functions even though i could just directly get these values
+        // would make more sense to make this a class rather than a struct
         // too lazy to change now
 
         /**
