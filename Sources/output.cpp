@@ -26,7 +26,7 @@ namespace {
     const int FLAG_INFO_OFFSET_Y = 4;
     const int TILES_LEFT_INFO_OFFSET_Y = 5;
 
-    const char BLANK = '.';
+    const char* BLANK = "\033[38;5;245m.\033[0m";
     const char* MINE = "\033[38;5;196m▇\033[0m";
     const char* FLAG = "\033[38;5;208m▶\033[0m";
 
