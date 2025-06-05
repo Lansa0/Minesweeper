@@ -13,4 +13,5 @@ namespace Output {
     void Reveal(const Responses::Tap& response);
     void Flag(const std::pair<char,char>& flagged_tile, const Responses::Flag& response);
     void Reset();
+    void Quit(const Responses::SessionStats& stats);
 }

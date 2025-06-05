@@ -26,6 +26,7 @@ namespace {
     const int FLAG_INFO_OFFSET_Y = 4;
     const int TILES_LEFT_INFO_OFFSET_Y = 5;
 
+    const char BLANK = '.';
     const char* MINE = "\033[38;5;196m▇\033[0m";
     const char* FLAG = "\033[38;5;208m▶\033[0m";
 
@@ -36,6 +37,16 @@ namespace {
 
     inline std::string setCursor(int y, int x) {
         return "\033[" + std::to_string(y) + ';' + std::to_string(x) + 'H';
+    }
+
+    std::string formatStatLine(const std::string& temp, const int stat_count) {
+        std::string Formatted = "┃                               ";
+        Formatted += temp + std::to_string(stat_count);
+
+        const int Length = Formatted.length();
+        Formatted.append(85 - Length + 1,' ');
+        Formatted.append("┃\n");
+        return Formatted;
     }
 
     /**
@@ -77,7 +88,7 @@ namespace {
         if (n == 9)
         {std::cout << MINE;}
         else if (n == 0)
-        {std::cout << ' ';}
+        {std::cout << BLANK;}
         else
         {std::cout << TILE_COLOURS[n] << n << "\033[0m";}
     }
@@ -212,9 +223,6 @@ namespace Output {
             case States::Log::Bad:
                 Message = "Bad Input";
                 break;
-            case States::Log::Quit:
-                Message = "Program Quit";
-                break;
             case States::Log::Win:
                 Message = "Game Won";
                 break;
@@ -225,6 +233,11 @@ namespace Output {
             insertLog(Message);
     }
 
+    /**
+     * Handles revealing tiles on the UI
+     *
+     * @param response: Response data determining what to render
+     */
     void Reveal(const Responses::Tap& response) {
         setFlagCount(response.NumFlags);
         setRemainingCount(response.NumTilesLeft);
@@ -236,6 +249,12 @@ namespace Output {
         }
     }
 
+    /**
+     * Renders flag onto the given tile slot in the UI
+     *
+     * @param flagged_tile: Tile where the flag will go on
+     * @param response: Additional data to determine what to render
+     */
     void Flag(const std::pair<char,char>& flagged_tile, const Responses::Flag& response) {
         setFlagCount(response.NumFlags);
 
@@ -250,9 +269,60 @@ namespace Output {
         std::cout << setCursor(TILE_OFFSET_Y + Row,TILE_OFFSET_X + Column) << c;
     }
 
+    /**
+     * Clears/Resets the board and info UI
+     */
     void Reset() {
         resetBoard();
         resetInfo();
+    }
+
+    /**
+     * Handles clearing the dashboard and outputting the session stats UI
+     *
+     * @param stats: Session stats
+     */
+    void Quit(const Responses::SessionStats& stats) {
+
+        const std::string BoardsPlayed = formatStatLine("Boards Played    ", stats.BoardsPlayed);
+        const std::string GamesWonStat = formatStatLine("Games Won        ", stats.GamesWon) ;
+        const std::string GamesLostStat = formatStatLine("Games Lost       ", stats.GamesLost);
+        const std::string TilesRevealedStat = formatStatLine("Tiles Revealed   ", stats.TilesRevealed);
+
+        std::cout << setCursor(1,1)
+        << "┏━Session-Stats━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << BoardsPlayed
+        << GamesWonStat
+        << GamesLostStat
+        << TilesRevealedStat
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┃                                                                                   ┃\n"
+        << "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n";
     }
 
 }
