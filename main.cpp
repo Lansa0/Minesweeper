@@ -3,12 +3,18 @@
 #include "input.hpp"
 #include "tiles.hpp"
 
+#include <thread>
+#include <chrono>
+
+
 int main() {
     Output::Dashboard();
     Responses::SessionStats SessionStats = Responses::SessionStats();
 
     bool NewGame = true;
     States::Game GameState = States::Game::Playon;
+
+    std::thread TimerThread;
 
     do {
         const Responses::Input Response = Input::Get();
@@ -26,6 +32,7 @@ int main() {
                     NewGame = false;
                     SessionStats.BoardsPlayed++;
                     Tiles::generateBoard(Tile);
+                    Output::startTimer();
                 }
 
                 const Responses::Tap TR = Tiles::Tap(Tile);
@@ -67,6 +74,7 @@ int main() {
                 NewGame = true;
                 GameState = States::Game::Playon;
 
+                Output::endTimer();
                 Output::Reset();
                 Output::Log(States::Log::Reset,Tile);
                 break;
@@ -78,6 +86,8 @@ int main() {
             }
 
             case States::Input::Quit: {
+
+                Output::endTimer();
                 Output::Quit(SessionStats);
                 return 0;
             }
@@ -92,12 +102,14 @@ int main() {
 
             case States::Game::Win: {
                 SessionStats.GamesWon++;
+                Output::endTimer();
                 Output::Log(States::Log::Win,Tile);
                 break;
             }
 
             case States::Game::Lose: {
                 SessionStats.GamesLost++;
+                Output::endTimer();
                 Output::Log(States::Log::Lose,Tile);
                 break;
             }

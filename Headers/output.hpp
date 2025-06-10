@@ -5,10 +5,14 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <thread>
+#include <chrono>
 #include <map>
 
 namespace Output {
     void Dashboard();
+    void startTimer();
+    void endTimer();
     void Log(States::Log key, const std::pair<char,char>& tile);
     void Reveal(const Responses::Tap& response);
     void Flag(const std::pair<char,char>& flagged_tile, const Responses::Flag& response);

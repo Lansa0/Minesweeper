@@ -5,9 +5,9 @@ namespace {
     // Constants
     const int CHAR_OFFSET = 64;
 
-    const int LOG_MAX_SIZE = 22;
+    const int LOG_MAX_SIZE = 21;
     const int LOG_OFFSET_X = 3;
-    const int LOG_OFFSET_Y = 8;
+    const int LOG_OFFSET_Y = 9;
 
     const int TILE_OFFSET_X = 29;
     const int TILE_OFFSET_Y = 3;
@@ -22,13 +22,14 @@ namespace {
         {8, "\033[38;5;245m"},  // 245  : Grey
     };
 
-    const int INFO_OFFSET_X = 19;
-    const int FLAG_INFO_OFFSET_Y = 4;
-    const int TILES_LEFT_INFO_OFFSET_Y = 5;
+    const int INFO_OFFSET_X             = 19;
+    const int TIMER_INFO_OFFSET_Y       = 3;
+    const int FLAG_INFO_OFFSET_Y        = 5;
+    const int TILES_LEFT_INFO_OFFSET_Y  = 6;
 
-    const char* BLANK = "\033[38;5;245m.\033[0m";
-    const char* MINE = "\033[38;5;196m▇\033[0m";
-    const char* FLAG = "\033[38;5;208m▶\033[0m";
+    const char* BLANK   = "\033[38;5;245m.\033[0m";
+    const char* MINE    = "\033[38;5;196m▇\033[0m";
+    const char* FLAG    = "\033[38;5;208m▶\033[0m";
 
     // Macros
     inline std::string formatTile(const std::pair<char,char>& tile) {
@@ -47,6 +48,25 @@ namespace {
         Formatted.append(85 - Length + 1,' ');
         Formatted.append("┃\n");
         return Formatted;
+    }
+
+    struct {
+        bool TimerOn = false;
+        std::thread TimerThread;
+    } Timer;
+
+    void setTime() {
+        int Count = 0;
+        const auto s = std::chrono::seconds(1);
+        while (Timer.TimerOn) {
+            if (Count > 999) {break;}
+            std::stringstream ss;
+            ss << std::setw(3) << std::setfill('0') << Count;
+            std::string Formatted = ss.str();
+            std::cout << setCursor(TIMER_INFO_OFFSET_Y,INFO_OFFSET_X) << Formatted << std::flush;
+            Count++;
+            std::this_thread::sleep_for(s);
+        }
     }
 
     /**
@@ -140,6 +160,7 @@ namespace {
      */
     void resetInfo() {
         std::cout
+        << setCursor(TIMER_INFO_OFFSET_Y,INFO_OFFSET_X) << "$@#"
         << setCursor(FLAG_INFO_OFFSET_Y,INFO_OFFSET_X) << "&*^"
         << setCursor(TILES_LEFT_INFO_OFFSET_Y,INFO_OFFSET_X) << "!~%";
     }
@@ -152,16 +173,16 @@ namespace Output {
      * Outputs the main UI
      */
     void Dashboard() {
-        std::cout << "\033[2J\033[H"
+        std::cout << "\033[?25l\033[2J\033[H"
         <<"┏━INFO━━━━━━━━━━━━━━━━━┓┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
         <<"┃                      ┃┃     A B C D E F G H I J K L M N O P Q R S T U V W X Y Z   ┃\n"
-        <<"┃ Total Bombs     100  ┃┃   ┌─────────────────────────────────────────────────────┐ ┃\n"
-        <<"┃ Flags Used      &*^  ┃┃ A │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
-        <<"┃ Tiles Left      !~%  ┃┃ B │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
-        <<"┃                      ┃┃ C │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
-        <<"┗━━━━━━━━━━━━━━━━━━━━━━┛┃ D │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
-        <<"┏━LOG━━━━━━━━━━━━━━━━━━┓┃ E │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
-        <<"┃                      ┃┃ F │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
+        <<"┃ Timer           $@#  ┃┃   ┌─────────────────────────────────────────────────────┐ ┃\n"
+        <<"┃ Total Bombs     100  ┃┃ A │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
+        <<"┃ Flags Used      &*^  ┃┃ B │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
+        <<"┃ Tiles Left      !~%  ┃┃ C │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
+        <<"┃                      ┃┃ D │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
+        <<"┗━━━━━━━━━━━━━━━━━━━━━━┛┃ E │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
+        <<"┏━LOG━━━━━━━━━━━━━━━━━━┓┃ F │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
         <<"┃                      ┃┃ G │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
         <<"┃                      ┃┃ H │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
         <<"┃                      ┃┃ I │ - - - - - - - - - - - - - - - - - - - - - - - - - - │ ┃\n"
@@ -187,6 +208,18 @@ namespace Output {
         <<"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
         <<"┃ INPUT ::                                                                          ┃\n"
         <<"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛";
+    }
+
+    void startTimer() {
+        Timer.TimerOn = true;
+        Timer.TimerThread = std::thread(setTime);
+    }
+
+    void endTimer() {
+        Timer.TimerOn = false;
+        if (Timer.TimerThread.joinable()) {
+            Timer.TimerThread.join();
+        }
     }
 
     /**
@@ -289,7 +322,7 @@ namespace Output {
         const std::string GamesLostStat = formatStatLine("Games Lost       ", stats.GamesLost);
         const std::string TilesRevealedStat = formatStatLine("Tiles Revealed   ", stats.TilesRevealed);
 
-        std::cout << setCursor(1,1)
+        std::cout << setCursor(1,1) << "\033[?25h"
         << "┏━Session-Stats━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
         << "┃                                                                                   ┃\n"
         << "┃                                                                                   ┃\n"

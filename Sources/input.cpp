@@ -1,3 +1,7 @@
+#include <termios.h>
+#include <unistd.h>
+#include <cctype>
+
 #include "input.hpp"
 
 namespace {
@@ -5,15 +9,52 @@ namespace {
     // Constants
     const char* SET_CURSOR = "\033[33;12H";
     const char* FILLER = "                                                                         ";
+    const std::pair<char,char> InvalidTile = {'0','0'};
 
-    std::string parseInput() {
-        std::string Input;
+    char readChar() {
+            struct termios oldt, newt;
+            char ch;
+            tcgetattr(STDIN_FILENO, &oldt);
+            newt = oldt;
+            newt.c_lflag &= ~(ICANON | ECHO);
+            tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+            read(STDIN_FILENO, &ch, 1);
+            tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+            return ch;
+    }
+
+    std::string getInput() {
+        std::string Input = "";
+
         do {
-            std::cout << SET_CURSOR << FILLER << SET_CURSOR;
-            std::getline(std::cin, Input);
-        } while (Input.empty());
+            std::cout << SET_CURSOR << FILLER << SET_CURSOR << Input << std::flush;
+            const char c = readChar();
+            if (std::isspace(static_cast<unsigned char>(c))) {
+                if (c == '\n') {break;}
+           else if (c == ' ')  {Input.push_back(c);}
+                continue;
+            }
+
+            else if ((c == '\b' || c == '\x7f') && !Input.empty()) {
+                Input.pop_back();
+            }
+
+            else if (Input.size() < 73) {
+                Input.push_back(c);
+            }
+
+        } while (true);
         return Input;
     }
+
+    // std::string parseInput() {
+    //     std::string Input;
+    //     do {
+    //         std::cout << SET_CURSOR << FILLER << SET_CURSOR;
+    //         std::getline(std::cin, Input);
+    //     } while (Input.empty());
+    //     return Input;
+    // }
 
     /**
      * Splits string input with given delimiter
@@ -46,7 +87,6 @@ namespace {
         return Strings;
     }
 
-    const std::pair<char,char> InvalidTile = {'0','0'};
     /**
      * Checks for valid tile input and returns formatted tile data
      *
@@ -81,7 +121,7 @@ namespace Input {
      */
     Responses::Input Get() {
 
-        std::string Input = parseInput();
+        std::string Input = getInput();
         std::vector<std::string> Tokens = split(Input);
 
         Responses::Input Response;
