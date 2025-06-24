@@ -3,10 +3,6 @@
 #include "input.hpp"
 #include "tiles.hpp"
 
-#include <thread>
-#include <chrono>
-
-
 int main() {
     Output::Dashboard();
     Responses::SessionStats SessionStats = Responses::SessionStats();
