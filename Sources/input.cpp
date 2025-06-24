@@ -3,9 +3,10 @@
 namespace {
 
     // Constants
-    const char* SET_CURSOR = "\033[33;12H";
-    const char* FILLER = "                                                                         ";
+    constexpr char SET_CURSOR[] = "\033[33;12H";
+    constexpr char FILLER[] = "                                                                         ";
 
+    // Util
     std::string parseInput() {
         std::string Input;
         do {

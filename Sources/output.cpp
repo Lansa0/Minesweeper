@@ -3,15 +3,15 @@
 namespace {
 
     // Constants
-    const int CHAR_OFFSET = 64;
+    constexpr int CHAR_OFFSET = 64;
 
-    const int LOG_MAX_SIZE = 22;
-    const int LOG_OFFSET_X = 3;
-    const int LOG_OFFSET_Y = 8;
+    constexpr int LOG_MAX_SIZE = 22;
+    constexpr int LOG_OFFSET_X = 3;
+    constexpr int LOG_OFFSET_Y = 8;
 
-    const int TILE_OFFSET_X = 29;
-    const int TILE_OFFSET_Y = 3;
-    std::map<int,std::string> TILE_COLOURS = {
+    constexpr int TILE_OFFSET_X = 29;
+    constexpr int TILE_OFFSET_Y = 3;
+    const std::map<int,std::string> TILE_COLOURS = {
         {1, "\033[38;5;26m"},   // 26   : Blue
         {2, "\033[38;5;22m"},   // 22   : Green
         {3, "\033[38;5;196m"},  // 196  : Red
@@ -22,15 +22,15 @@ namespace {
         {8, "\033[38;5;245m"},  // 245  : Grey
     };
 
-    const int INFO_OFFSET_X = 19;
-    const int FLAG_INFO_OFFSET_Y = 4;
-    const int TILES_LEFT_INFO_OFFSET_Y = 5;
+    constexpr int INFO_OFFSET_X = 19;
+    constexpr int FLAG_INFO_OFFSET_Y = 4;
+    constexpr int TILES_LEFT_INFO_OFFSET_Y = 5;
 
-    const char* BLANK = "\033[38;5;245m.\033[0m";
-    const char* MINE = "\033[38;5;196m▇\033[0m";
-    const char* FLAG = "\033[38;5;208m▶\033[0m";
+    constexpr char BLANK[] = "\033[38;5;245m.\033[0m";
+    constexpr char MINE[] = "\033[38;5;196m▇\033[0m";
+    constexpr char FLAG[] = "\033[38;5;208m▶\033[0m";
 
-    // Macros
+    // Util
     inline std::string formatTile(const std::pair<char,char>& tile) {
         return {'\'',tile.first,':',tile.second,'\''};
     }
@@ -90,7 +90,7 @@ namespace {
         else if (n == 0)
         {std::cout << BLANK;}
         else
-        {std::cout << TILE_COLOURS[n] << n << "\033[0m";}
+        {std::cout << TILE_COLOURS.at(n) << n << "\033[0m";}
     }
 
     /**
